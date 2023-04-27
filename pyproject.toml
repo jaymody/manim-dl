@@ -1,12 +1,12 @@
 [tool.poetry]
-name = "manimly"
+name = "manim-jm"
 version = "0.1.0"
 description = ""
 authors = ["jaymody <jaykmody@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.9,<3.12"
+python = ">=3.11,<3.12"
 manim = "^0.17.3"
 
 [tool.poetry.group.dev.dependencies]

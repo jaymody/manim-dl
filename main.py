@@ -1,66 +1,63 @@
 from manim import *
 
 
+def create_vector(d, direction):
+    squares = [Square().set_opacity(0.3) for _ in range(d)]
+    return VGroup(*squares).arrange(direction, buff=0)
+
+
+def create_vectors(n, d, group_direction=RIGHT, vector_direction=RIGHT):
+    vectors = [create_vector(d, vector_direction) for _ in range(n)]
+    return VGroup(*vectors).arrange(group_direction, buff=2.0)
+
+
 class ConvolutionOverWordVectors(Scene):
     def construct(self):
-        def create_vec(color, opacity=None):
-            squares = [
-                Square(side_length=1, color=color, fill_opacity=0.3).set_opacity(
-                    opacity
-                )
-                for _ in range(4)
-            ]
-            return Group(*squares).arrange(RIGHT, buff=0)
-
-        def create_vecs(num, w, color):
-            left = [create_vec(color, 0.0) for _ in range(w)]
-            middle = [create_vec(color) for _ in range(num)]
-            right = [create_vec(color, 0.0) for _ in range(w)]
-            return Group(*left, *middle, *right).arrange(RIGHT, buff=2.0)
-
         # inputs
         sentence = "not all heroes wear capes"
-        K = 3  # must be an odd number >= 1
+        K = 3  # kernel size,  must be an odd number >= 1
+        D = 4  # dimensionality of the vectors
 
         words = sentence.split()
         N = len(words)
-        W = (K - 1) // 2
 
         # write words
-        texts = Tex(*words, arg_separator=" ").scale_to_fit_width(width=8).move_to(UP)
-        self.play(Write(texts))
+        text = Tex(*words, arg_separator=" ")
+        self.play(Write(text))
         self.wait()
 
         # create vectors
-        vecs = create_vecs(N, W, GREEN).scale_to_fit_width(width=12)
-        self.play(*[FadeTransform(texts[i], vecs[i + W]) for i in range(N)])
+        vectors = (
+            create_vectors(N, D)
+            .set_color(GREEN)
+            .scale_to_fit_width(config.frame_width * 0.85 * N / (N + K - 1))
+        )
+        self.play(*[FadeTransform(text[i], vectors[i]) for i in range(N)])
         self.wait()
 
         # convolve anim
-        def convolve(in_vecs, out_color):
-            # move embeddings up
-            self.play(in_vecs.animate.shift(UP))
-            self.wait()
+        def convolve(in_vectors, out_color):
+            # create output vectors
+            out_vectors = in_vectors.copy().move_to(DOWN).set_color(out_color)
 
-            # conv
-            boxes = []
-            for i in range(N):
-                rect = SurroundingRectangle(in_vecs[i : i + K])
-                boxes.append(rect)
-
-            out_vecs = create_vecs(N, W, out_color).scale_to_fit_width(width=12)
+            # create kernel rectangle
+            kernel = SurroundingRectangle(in_vectors[:K]).move_to(
+                in_vectors[0].get_center()
+            )
+            self.play(Create(kernel))
 
             for i in range(N):
-                if i == 0:
-                    self.play(Create(boxes[0]))
-                else:
-                    self.play(ReplacementTransform(boxes[i - 1], boxes[i]))
-                self.play(FadeIn(out_vecs[K + i - 2]))
-                self.wait(0.5)
+                self.play(kernel.animate.move_to(in_vectors[i].get_center()))
+                self.play(FadeIn(out_vectors[i]))
+                self.wait(0.3)
 
-            self.play(FadeOut(boxes[-1]), FadeOut(in_vecs))
-            self.remove(*boxes, in_vecs)
+            self.play(FadeOut(kernel), FadeOut(in_vectors))
+            self.remove(kernel, out_vectors)
 
-            return out_vecs
+            # place out vectors where input vectors where
+            self.play(out_vectors.animate.move_to(in_vectors.get_center()))
 
-        convolve(convolve(vecs, RED), BLUE)
+            return out_vectors
+
+        self.play(vectors.animate.shift(UP))
+        convolve(convolve(vectors, RED), BLUE)
