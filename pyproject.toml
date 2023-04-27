@@ -1,0 +1,26 @@
+[tool.poetry]
+name = "manimly"
+version = "0.1.0"
+description = ""
+authors = ["jaymody <jaykmody@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.9,<3.12"
+manim = "^0.17.3"
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.3.0"
+pylint = "^2.17.3"
+ipykernel = "^6.22.0"
+isort = "^5.12.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+profile = "black"
+
+[tool.pylint.messages_control]
+disable = ["C", "R"]
