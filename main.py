@@ -94,6 +94,7 @@ class RecurrenceOverWordVectors(Scene):
             )
 
             self.play(FadeIn(hidden_vectors[0]))
+            self.remove(init_hidden_vector)
             for i in range(N):
                 anim_cell(
                     in_vectors[i],
