@@ -11,11 +11,19 @@ def create_vectors(n, d, group_direction=RIGHT, vector_direction=RIGHT, buff=2.0
     return VGroup(*vectors).arrange(group_direction, buff=buff)
 
 
-def create_function_circle():
+def create_matrix(m, n):
+    return VGroup(*[create_vector(n, RIGHT) for _ in range(m)]).arrange(DOWN, buff=0)
+
+
+def add_object_to_middle(a, b, scale=0.35):
+    return a.add(b.scale_to_fit_width(a.width * scale).move_to(b.get_center()))
+
+
+def create_function_circle(text="f"):
     circle = Circle(
         color=WHITE, stroke_width=DEFAULT_STROKE_WIDTH * 0.5, fill_opacity=0.1
     )
-    circle.add(MathTex("f").scale(2.5))
+    add_object_to_middle(circle, MathTex(text))
     return circle
 
 
@@ -165,3 +173,124 @@ class ConvolutionOverWordVectors(Scene):
 
         self.play(vectors.animate.shift(UP))
         convolve(convolve(vectors, RED), BLUE)
+
+
+class SelfAttentionOverWordVectors(Scene):
+    def construct(self):
+        # inputs
+        sentence = "not all heroes wear capes"
+        D = 4  # dimensionality of the vectors
+
+        words = sentence.split()
+        N = len(words)
+
+        # write words
+        text = Tex(*words, arg_separator=" ")
+        self.play(Write(text))
+        self.wait()
+
+        # create vectors
+        X = (
+            create_vectors(N, D)
+            .set_color(GREEN)
+            .scale_to_fit_width(config.frame_width * 0.9)
+        )
+        self.play(*[FadeTransform(text[i], X[i]) for i in range(N)])
+        self.wait()
+
+        # convert to matrix
+        self.play(X.animate.arrange(DOWN, buff=0.0))
+        self.wait()
+        X = add_object_to_middle(X, MathTex("X"))
+        self.play(FadeIn(X[-1]))
+
+        # convert to Q, K, V
+        def matmul(X, out_color, symbol):
+            nn = (
+                create_function_circle(f"f_{symbol}")
+                .move_to(X.get_center())
+                .shift(RIGHT * X.height * 1.5)
+                .scale(X.height * 0.3)
+            )
+
+            Y = X.copy()
+            Y = Y.remove(Y[-1])
+            Y = Y.shift(RIGHT * X.height * 3).set_color(out_color)
+            Y.add(
+                MathTex(symbol)
+                .scale_to_fit_height(X.height * 0.4)
+                .move_to(Y.get_center())
+            )
+
+            X_to_nn = Arrow(X.get_right(), nn.get_left())
+            nn_to_Y = Arrow(nn.get_right(), Y.get_left())
+
+            self.play(
+                FadeIn(nn),
+                FadeIn(X_to_nn),
+            )
+            self.play(
+                FadeIn(Y),
+                FadeIn(nn_to_Y),
+            )
+
+            self.play(FadeOut(X_to_nn), FadeOut(nn_to_Y), FadeOut(nn))
+            self.remove(X_to_nn, nn_to_Y, nn)
+
+            return Y
+
+        # move up and make smaller
+        self.play(X.animate.scale(0.5))
+        self.play(X.animate.shift(LEFT * X.width * 1.5 + UP * X.height * 1.5))
+        Q = matmul(X, BLUE, "Q")
+        self.play(X.animate.shift(DOWN * X.height * 1.5))
+        K = matmul(X, RED, "K")
+        self.play(X.animate.shift(DOWN * X.height * 1.5))
+        V = matmul(X, ORANGE, "V")
+        self.play(FadeOut(X))
+
+        # attn equation
+        eq_str = r"\text{softmax}\left(QK^T \over \sqrt{d_k}\right)V"
+        attn_eq = MathTex(
+            r"\text{attention}(",
+            r"Q",
+            r",",
+            r"K",
+            r",",
+            r"V",
+            r") = ",
+            eq_str,
+        ).shift(DOWN)
+
+        # move Q, K, V above the equation
+        qkv = VGroup(Q, K, V)
+        self.play(
+            qkv.animate.arrange(RIGHT, buff=2.0).move_to(attn_eq.get_center() + 2 * UP)
+        )
+
+        # write attn equation
+        self.play(Write(attn_eq))
+
+        # remove qkv
+        self.play(
+            FadeTransform(qkv[0], attn_eq[1]),
+            FadeTransform(qkv[1], attn_eq[3]),
+            FadeTransform(qkv[2], attn_eq[5]),
+        )
+        self.remove(qkv)
+
+        # put rhs to center
+        self.play(FadeOut(attn_eq[:-1]), attn_eq[-1].animate.center())
+        eq1 = MathTex(eq_str)
+        eq2 = MathTex(eq_str, " = ")
+        self.add(eq1)
+        self.remove(attn_eq[-1])
+        self.play(TransformMatchingTex(eq1, eq2))
+        self.play(eq2.animate.shift(LEFT))
+
+        Y = X.copy()
+        Y = Y.remove(Y[-1]).move_to(eq2.get_right() + RIGHT)
+        self.play(FadeIn(Y))
+        self.play(FadeOut(eq2), Y.animate.center())
+        self.play(Y.animate.arrange(RIGHT))
+        self.wait()
