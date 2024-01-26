@@ -1,27 +1,11 @@
-[tool.poetry]
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
 name = "manim-jm"
 version = "0.1.0"
-description = ""
-authors = ["jaymody <jaykmody@gmail.com>"]
+authors = [{ name = "Jay Mody", email = "jaykmody@gmail.com" }]
 readme = "README.md"
-
-[tool.poetry.dependencies]
-python = ">=3.11,<3.12"
-manim = "^0.17.3"
-numpy = "^1.24.3"
-
-[tool.poetry.group.dev.dependencies]
-black = "^23.3.0"
-pylint = "^2.17.3"
-ipykernel = "^6.22.0"
-isort = "^5.12.0"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
-
-[tool.isort]
-profile = "black"
-
-[tool.pylint.messages_control]
-disable = ["C", "R"]
+requires-python = ">=3.11,<3.12"
+dependencies = ["manim", "numpy"]

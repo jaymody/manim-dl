@@ -4,5 +4,5 @@ My random assortment of [manim](https://www.manim.community) animations.
 Install manim (see [instructions](https://docs.manim.community/en/stable/installation.html)) and then run:
 
 ```bash
-manim -qm main.py
+manim -ql src/main.py
 ```
