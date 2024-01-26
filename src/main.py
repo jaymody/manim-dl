@@ -1,4 +1,30 @@
-from manim import *
+from manim import (
+    BLUE,
+    DEFAULT_STROKE_WIDTH,
+    DOWN,
+    GREEN,
+    LEFT,
+    ORANGE,
+    RED,
+    RIGHT,
+    UP,
+    WHITE,
+    Arrow,
+    Circle,
+    Create,
+    FadeIn,
+    FadeOut,
+    FadeTransform,
+    MathTex,
+    Scene,
+    Square,
+    SurroundingRectangle,
+    Tex,
+    TransformMatchingTex,
+    VGroup,
+    Write,
+    config,
+)
 
 
 def create_vector(d, direction):
